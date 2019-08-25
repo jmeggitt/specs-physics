@@ -1,19 +1,19 @@
-use specs::{Component, DenseVecStorage, FlaggedStorage};
 use nalgebra::RealField;
+use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 #[cfg(feature = "physics3d")]
-use nalgebra::{Point3 as Point, Matrix3};
+use nalgebra::{Matrix3, Point3 as Point};
 
 #[cfg(feature = "physics2d")]
-use nalgebra::{Point2 as Point};
+use nalgebra::Point2 as Point;
 
 #[cfg(feature = "physics3d")]
-use nphysics::{algebra::{Force3 as Force, Velocity3 as Velocity, ForceType,},
-                 object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc}};
+use nphysics::{algebra::{Force3 as Force, ForceType, Velocity3 as Velocity},
+               object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc}};
 
 #[cfg(feature = "physics2d")]
-use nphysics::{algebra::{Force2 as Force, Velocity2 as Velocity, ForceType,},
-                 object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc}};
+use nphysics::{algebra::{Force2 as Force, ForceType, Velocity2 as Velocity},
+               object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc}};
 
 /// The `PhysicsBody` `Component` represents a `PhysicsWorld` `RigidBody` in
 /// Specs and contains all the data required for the synchronisation between

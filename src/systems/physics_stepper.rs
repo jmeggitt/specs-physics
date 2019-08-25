@@ -1,15 +1,14 @@
 use std::marker::PhantomData;
 
-use specs::{
-    world::Index, Entities, Entity, Read, Resources, System, SystemData, Write, WriteExpect,
-};
+use specs::{world::Index, Entities, Entity, Read, Resources, System, SystemData, Write,
+            WriteExpect};
 
-use crate::events::{ContactEvent, ContactEvents, ContactType, ProximityEvent, ProximityEvents};
+use crate::{events::{ContactEvent, ContactEvents, ContactType, ProximityEvent, ProximityEvents},
+            parameters::TimeStep,
+            Physics};
 use nalgebra::RealField;
 use ncollide::{events::ContactEvent as NContactEvent, world::CollisionObjectHandle};
 use nphysics::world::ColliderWorld;
-use crate::parameters::TimeStep;
-use crate::Physics;
 
 /// The `PhysicsStepperSystem` progresses the nphysics `World`.
 pub struct PhysicsStepperSystem<N> {

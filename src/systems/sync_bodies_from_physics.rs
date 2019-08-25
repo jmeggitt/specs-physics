@@ -2,9 +2,7 @@ use std::marker::PhantomData;
 
 use specs::{Join, ReadExpect, Resources, System, SystemData, WriteStorage};
 
-use crate::bodies::PhysicsBody;
-use crate::positon::Pose;
-use crate::Physics;
+use crate::{bodies::PhysicsBody, positon::Pose, Physics};
 use nalgebra::RealField;
 
 /// The `SyncBodiesFromPhysicsSystem` synchronised the updated position of

@@ -3,24 +3,20 @@ use std::{f32::consts::PI, fmt, ops::Deref};
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 use nalgebra::{Point2, Point3, RealField, Unit};
-use ncollide::{
-    shape::{Ball, Capsule, Compound, Cuboid, HeightField, Plane, Polyline, Segment, ShapeHandle},
-    world::CollisionGroups
-};
-use nphysics::{
-    material::{BasicMaterial, MaterialHandle},
-    object::ColliderHandle,
-};
-
+use ncollide::shape::{Ball, Capsule, Compound, Cuboid, HeightField, Plane, Polyline, Segment,
+                      ShapeHandle};
+use ncollide::world::CollisionGroups;
+use nphysics::material::{BasicMaterial, MaterialHandle};
+use nphysics::object::ColliderHandle;
 
 #[cfg(feature = "physics3d")]
 use ncollide::shape::{ConvexHull, TriMesh, Triangle};
 
 #[cfg(feature = "physics3d")]
-use nalgebra::{Isometry3 as Isometry, DMatrix, Vector3 as Vector, Point3 as Point};
+use nalgebra::{DMatrix, Isometry3 as Isometry, Point3 as Point, Vector3 as Vector};
 
 #[cfg(feature = "physics2d")]
-use nalgebra::{Isometry2 as Isometry, Vector2 as Vector, DVector, Point2 as Point};
+use nalgebra::{DVector, Isometry2 as Isometry, Point2 as Point, Vector2 as Vector};
 
 pub type MeshData<N> = (Vec<Point3<N>>, Vec<Point3<usize>>, Option<Vec<Point2<N>>>);
 

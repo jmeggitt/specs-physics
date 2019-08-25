@@ -1,14 +1,10 @@
 use std::marker::PhantomData;
 
-use specs::{
-    storage::ComponentEvent, world::Index, BitSet, Join, ReadStorage, ReaderId, Resources, System,
-    SystemData, WriteExpect, WriteStorage,
-};
+use specs::{storage::ComponentEvent, world::Index, BitSet, Join, ReadStorage, ReaderId, Resources,
+            System, SystemData, WriteExpect, WriteStorage};
 
+use crate::{bodies::PhysicsBody, positon::Pose, Physics};
 use nalgebra::RealField;
-use crate::bodies::PhysicsBody;
-use crate::positon::Pose;
-use crate::Physics;
 
 use super::iterate_component_events;
 
@@ -198,9 +194,9 @@ where
 
 #[cfg(all(test, feature = "physics3d"))]
 mod tests {
+    use crate::{systems::SyncBodiesToPhysicsSystem, Physics, PhysicsBodyBuilder, SimplePosition};
     use nalgebra::Isometry3;
     use nphysics::object::BodyStatus;
-    use crate::{systems::SyncBodiesToPhysicsSystem, Physics, PhysicsBodyBuilder, SimplePosition};
 
     use specs::{world::Builder, DispatcherBuilder, World};
 

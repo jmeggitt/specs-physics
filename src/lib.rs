@@ -235,57 +235,55 @@
 extern crate log;
 
 pub use nalgebra;
-#[cfg(feature = "physics3d")]
-pub extern crate ncollide3d as ncollide;
-#[cfg(feature = "physics3d")]
-pub extern crate nphysics3d as nphysics;
 #[cfg(feature = "physics2d")]
 pub extern crate ncollide2d as ncollide;
+#[cfg(feature = "physics3d")]
+pub extern crate ncollide3d as ncollide;
 #[cfg(feature = "physics2d")]
 pub extern crate nphysics2d as nphysics;
+#[cfg(feature = "physics3d")]
+pub extern crate nphysics3d as nphysics;
 pub use shrev;
 
 use std::collections::HashMap;
 
-use specs::{
-    world::Index, Component, DenseVecStorage, Dispatcher, DispatcherBuilder, Entity, FlaggedStorage,
-};
+use specs::{world::Index, Component, DenseVecStorage, Dispatcher, DispatcherBuilder, Entity,
+            FlaggedStorage};
 use specs_hierarchy::Parent;
 
-pub use self::{
-    bodies::{PhysicsBody, PhysicsBodyBuilder},
-    positon::{Pose, SimplePosition},
-    colliders::{PhysicsCollider, PhysicsColliderBuilder},
-};
+pub use bodies::{PhysicsBody, PhysicsBodyBuilder};
+pub use colliders::{PhysicsCollider, PhysicsColliderBuilder};
+pub use positon::{Pose, SimplePosition};
 
-#[deprecated(since = "0.4.0", note = "Position was renamed to Pose to better reflect how it\
-contains an orientation and to make it slightly shorter.")]
+#[deprecated(
+    since = "0.4.0",
+    note = "Position was renamed to Pose to better reflect how it\
+            contains an orientation and to make it slightly shorter."
+)]
 pub trait Position<N: RealField>: Pose<N> {}
 
-use nphysics::{
-    counters::Counters,
-    material::MaterialsCoefficientsTable,
-    object::{BodyHandle, ColliderHandle},
-    solver::IntegrationParameters,
-    world::World,
-};
+use nphysics::{counters::Counters,
+               material::MaterialsCoefficientsTable,
+               object::{BodyHandle, ColliderHandle},
+               solver::IntegrationParameters,
+               world::World};
 
 use systems::{PhysicsStepperSystem, SyncBodiesFromPhysicsSystem, SyncBodiesToPhysicsSystem,
-    SyncCollidersToPhysicsSystem, SyncParametersToPhysicsSystem};
+              SyncCollidersToPhysicsSystem, SyncParametersToPhysicsSystem};
 
 #[cfg(feature = "physics3d")]
 use nalgebra::Vector3 as Vector;
 
+use nalgebra::RealField;
 #[cfg(feature = "physics2d")]
 use nalgebra::Vector2 as Vector;
-use nalgebra::RealField;
 
 pub mod bodies;
 pub mod colliders;
 pub mod events;
 pub mod parameters;
-pub mod systems;
 pub mod positon;
+pub mod systems;
 
 /// Resource holding the internal fields where physics computation occurs.
 /// Some inspection methods are exposed to allow debugging.

@@ -1,16 +1,13 @@
 use std::ops::Deref;
 
-use specs::{
-    storage::{ComponentEvent, MaskedStorage},
-    BitSet, Component, ReaderId, Storage, Tracked,
-};
+use specs::{storage::{ComponentEvent, MaskedStorage},
+            BitSet, Component, ReaderId, Storage, Tracked};
 
-pub use self::{
-    physics_stepper::PhysicsStepperSystem, sync_bodies_from_physics::SyncBodiesFromPhysicsSystem,
-    sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
-    sync_colliders_to_physics::SyncCollidersToPhysicsSystem,
-    sync_parameters_to_physics::SyncParametersToPhysicsSystem,
-};
+pub use self::{physics_stepper::PhysicsStepperSystem,
+               sync_bodies_from_physics::SyncBodiesFromPhysicsSystem,
+               sync_bodies_to_physics::SyncBodiesToPhysicsSystem,
+               sync_colliders_to_physics::SyncCollidersToPhysicsSystem,
+               sync_parameters_to_physics::SyncParametersToPhysicsSystem};
 
 mod physics_stepper;
 mod sync_bodies_from_physics;

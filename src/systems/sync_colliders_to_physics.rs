@@ -1,13 +1,9 @@
 use std::marker::PhantomData;
 
-use specs::{
-    storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, Resources, System,
-    SystemData, WriteExpect, WriteStorage,
-};
+use specs::{storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, Resources, System,
+            SystemData, WriteExpect, WriteStorage};
 
-use crate::positon::Pose;
-use crate::colliders::PhysicsCollider;
-use crate::{Physics, PhysicsParent};
+use crate::{colliders::PhysicsCollider, positon::Pose, Physics, PhysicsParent};
 use nalgebra::RealField;
 use nphysics::object::{BodyPartHandle, ColliderDesc};
 
@@ -91,8 +87,7 @@ where
         let event_iter = physics_colliders
             .channel()
             .read(self.physics_colliders_reader_id.as_mut().unwrap());
-        for _ in event_iter{
-        }
+        for _ in event_iter {}
     }
 
     fn setup(&mut self, res: &mut Resources) {
@@ -252,11 +247,9 @@ where
 mod tests {
     use specs::{world::Builder, DispatcherBuilder, World};
 
+    use crate::{colliders::Shape, systems::SyncCollidersToPhysicsSystem, Physics,
+                PhysicsColliderBuilder, SimplePosition};
     use nalgebra::Isometry3;
-    use crate::{
-        colliders::Shape, systems::SyncCollidersToPhysicsSystem, Physics,
-        PhysicsColliderBuilder, SimplePosition,
-    };
 
     #[test]
     fn add_collider() {

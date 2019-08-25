@@ -2,11 +2,9 @@ use std::marker::PhantomData;
 
 use specs::{Read, Resources, System, SystemData, WriteExpect};
 
+use crate::{parameters::{Gravity, PhysicsIntegrationParameters, PhysicsProfilingEnabled},
+            Physics};
 use nalgebra::RealField;
-use crate::{
-    parameters::{Gravity, PhysicsIntegrationParameters, PhysicsProfilingEnabled},
-    Physics,
-};
 
 /// The `SyncParametersToPhysicsSystem` synchronises the simulation parameters
 /// with the nphysics `World`.
@@ -81,8 +79,8 @@ where
 mod tests {
     use specs::{DispatcherBuilder, World};
 
-    use nalgebra::Vector3;
     use crate::{parameters::Gravity, systems::SyncParametersToPhysicsSystem, Physics};
+    use nalgebra::Vector3;
 
     #[test]
     fn update_gravity() {
@@ -104,5 +102,4 @@ mod tests {
         assert_eq!(physics.world.gravity().y, 2.0);
         assert_eq!(physics.world.gravity().z, 3.0);
     }
-
 }

@@ -7,7 +7,6 @@ use std::ops::{Deref, DerefMut};
 use nalgebra::{convert, RealField, Scalar};
 use nphysics::solver::IntegrationParameters;
 
-
 #[cfg(feature = "physics3d")]
 use nalgebra::Vector3 as Vector;
 

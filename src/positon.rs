@@ -1,16 +1,15 @@
+use nalgebra::RealField;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 use std::ops::{Deref, DerefMut};
-use nalgebra::RealField;
 
 #[cfg(feature = "physics3d")]
-use nalgebra::{Point3 as Point, Isometry3 as Isometry};
+use nalgebra::{Isometry3 as Isometry, Point3 as Point};
 
 #[cfg(feature = "physics2d")]
-use nalgebra::{Point2 as Point, Isometry2 as Isometry};
+use nalgebra::{Isometry2 as Isometry, Point2 as Point};
 
-
-/// A `Pose` is a position and an orientation. They are wrapped together into an isometry for use in
-/// the physics engine.
+/// A `Pose` is a position and an orientation. They are wrapped together into an
+/// isometry for use in the physics engine.
 ///
 /// An implementation of the `Pose` trait is required for the
 /// synchronisation of the position of Specs and nphysics objects.
@@ -19,22 +18,23 @@ use nalgebra::{Point2 as Point, Isometry2 as Isometry};
 /// progressing the `World` it is used to synchronise the updated positions back
 /// towards Specs.
 pub trait Pose<N: RealField>:
-Component<Storage = FlaggedStorage<Self, DenseVecStorage<Self>>> + Send + Sync
+    Component<Storage = FlaggedStorage<Self, DenseVecStorage<Self>>> + Send + Sync
 {
     fn isometry(&self) -> &Isometry<N>;
     fn isometry_mut(&mut self) -> &mut Isometry<N>;
 
-    /// Helper function to extract the location of this `Pose`. Using `Pose::isometry()` is
-    /// preferable, but can be harder to work with. The translation of this `Pose` can be set
-    /// using `Pose::isometry_mut()`.
+    /// Helper function to extract the location of this `Pose`. Using
+    /// `Pose::isometry()` is preferable, but can be harder to work with.
+    /// The translation of this `Pose` can be set using `Pose::
+    /// isometry_mut()`.
     fn translation(&self) -> Point<N> {
         self.isometry().translation.vector.into()
     }
 
-    /// Helper function to extract the rotation of this `Pose`. Using `Pose::isometry()` is
-    /// preferable, but can be harder to work with. The rotation of this `Pose` can be set
-    /// using `Pose::isometry_mut()`. This is only available when the `physics2d` feature is
-    /// enabled.
+    /// Helper function to extract the rotation of this `Pose`. Using
+    /// `Pose::isometry()` is preferable, but can be harder to work with.
+    /// The rotation of this `Pose` can be set using `Pose::isometry_mut()`.
+    /// This is only available when the `physics2d` feature is enabled.
     #[cfg(feature = "physics2d")]
     fn angle(&self) -> N {
         self.isometry().rotation.angle()
