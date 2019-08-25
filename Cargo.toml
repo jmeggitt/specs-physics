@@ -16,7 +16,7 @@ keywords = ["specs", "nphysics", "nphysics3d"]
 [features]
 physics3d = ["ncollide3d", "nphysics3d"]
 physics2d = ["ncollide2d", "nphysics2d"]
-amethyst = ["amethyst_core"]
+amethyst = ["amethyst_core", "amethyst_error"]
 
 [dependencies]
 log = "^0.4.6"
@@ -29,6 +29,7 @@ ncollide3d = { version = "^0.19", optional = true }
 nphysics2d = { version = "^0.11", optional = true }
 nphysics3d = { version = "^0.11", optional = true }
 amethyst_core = { version = "^0.7", optional = true }
+amethyst_error = { version = "^0.2", optional = true }
 objekt = "0.1.2"
 
 [dev-dependencies]
