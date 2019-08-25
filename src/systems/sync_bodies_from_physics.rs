@@ -3,13 +3,13 @@ use std::marker::PhantomData;
 use specs::{Join, ReadExpect, Resources, System, SystemData, WriteStorage};
 
 use crate::bodies::PhysicsBody;
-use crate::positon::Position;
+use crate::positon::Pose;
 use crate::Physics;
 use nalgebra::RealField;
 
 /// The `SyncBodiesFromPhysicsSystem` synchronised the updated position of
 /// the `RigidBody`s in the nphysics `World` with their Specs counterparts. This
-/// affects the `Position` `Component` related to the `Entity`.
+/// affects the `Pose` `Component` related to the `Entity`.
 pub struct SyncBodiesFromPhysicsSystem<N, P> {
     n_marker: PhantomData<N>,
     p_marker: PhantomData<P>,
@@ -18,7 +18,7 @@ pub struct SyncBodiesFromPhysicsSystem<N, P> {
 impl<'s, N, P> System<'s> for SyncBodiesFromPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     type SystemData = (
         ReadExpect<'s, Physics<N>>,
@@ -29,10 +29,10 @@ where
     fn run(&mut self, data: Self::SystemData) {
         let (physics, mut physics_bodies, mut positions) = data;
 
-        // iterate over all PhysicBody components joined with their Positions
+        // iterate over all PhysicBody components joined with their Poses
         for (physics_body, position) in (&mut physics_bodies, &mut positions).join() {
             // if a RigidBody exists in the nphysics World we fetch it and update the
-            // Position component accordingly
+            // Pose component accordingly
             if let Some(rigid_body) = physics.world.rigid_body(physics_body.handle.unwrap()) {
                 *position.isometry_mut() = *rigid_body.position();
                 physics_body.update_from_physics_world(rigid_body);
@@ -52,7 +52,7 @@ where
 impl<N, P> Default for SyncBodiesFromPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     fn default() -> Self {
         Self {

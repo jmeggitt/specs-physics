@@ -29,21 +29,21 @@
 //! implemented for various standard types, such as `f32` and`f64`. `nalgebra`
 //! is re-exported under `specs_physics::nalgebra`.
 //!
-//! #### `P: Position<N>`
+//! #### `P: Pose<N>`
 //!
-//! a type parameter which implements the `specs_physics::bodies::Position`
+//! a type parameter which implements the `specs_physics::Pose`
 //! *trait*, requiring also a `Component` implementation with a
-//! `FlaggedStorage`. This `Position` `Component` is used to initially place a
+//! `FlaggedStorage`. This `Pose` `Component` is used to initially place a
 //! [RigidBody] in the [nphysics] world and later used to synchronise the
 //! updated translation and rotation of these bodies back into the [Specs]
 //! world.
 //!
-//! Example for a `Position` `Component`, simply using the "Isometry" type (aka
+//! Example for a `Pose` `Component`, simply using the "Isometry" type (aka
 //! combined translation and rotation structure) directly:
 //!
 //! ```rust,ignore
 //! use specs::{Component, DenseVecStorage, FlaggedStorage};
-//! use specs_physics::{bodies::Position, nalgebra::Isometry3};
+//! use specs_physics::{Pose, nalgebra::Isometry3};
 //!
 //! struct Pos(pub Isometry3<f32>);
 //!
@@ -51,7 +51,7 @@
 //!     type Storage = FlaggedStorage<Self, DenseVecStorage<Self>>;
 //! }
 //!
-//! impl Position<f32> for Pos {
+//! impl Pose<f32> for Pos {
 //!     fn isometry(&self) -> &Isometry3<f32> {
 //!         &self.0
 //!     }
@@ -63,7 +63,7 @@
 //! ```
 //!
 //! If you're using [Amethyst], you can enable the "amethyst" feature for this
-//! crate which provides a `Position<Float>` impl for `Transform`.
+//! crate which provides a `Pose<Float>` impl for `Transform`.
 //!
 //! ```toml
 //! [dependencies]
@@ -137,7 +137,7 @@
 //!
 //! 1. `specs_physics::systems::SyncBodiesToPhysicsSystem` - handles the
 //! creation, modification and removal of [RigidBody]'s based on the
-//! `PhysicsBody` `Component` and an implementation of the `Position`
+//! `PhysicsBody` `Component` and an implementation of the `Pose`
 //! *trait*.
 //!
 //! 2. `specs_physics::systems::SyncCollidersToPhysicsSystem` - handles
@@ -156,7 +156,7 @@
 //! 5. `specs_physics::systems::SyncBodiesFromPhysicsSystem` -
 //! handles the synchronisation of [RigidBody] positions and dynamics back
 //! into the [Specs] `Component`s. This `System` also utilises the
-//! `Position` *trait* implementation.
+//! `Pose` *trait* implementation.
 //!
 //! An example `Dispatcher` with all required `System`s:
 //!
@@ -254,9 +254,13 @@ use specs_hierarchy::Parent;
 
 pub use self::{
     bodies::{PhysicsBody, PhysicsBodyBuilder},
-    positon::{Position, SimplePosition},
+    positon::{Pose, SimplePosition},
     colliders::{PhysicsCollider, PhysicsColliderBuilder},
 };
+
+#[deprecated(since = "0.4.0", note = "Position was renamed to Pose to better reflect how it\
+contains an orientation and to make it slightly shorter.")]
+pub trait Position<N: RealField>: Pose<N> {}
 
 use nphysics::{
     counters::Counters,
@@ -266,19 +270,15 @@ use nphysics::{
     world::World,
 };
 
-use self::{
-    nalgebra::RealField,
-    systems::{
-        PhysicsStepperSystem, SyncBodiesFromPhysicsSystem, SyncBodiesToPhysicsSystem,
-        SyncCollidersToPhysicsSystem, SyncParametersToPhysicsSystem,
-    },
-};
+use systems::{PhysicsStepperSystem, SyncBodiesFromPhysicsSystem, SyncBodiesToPhysicsSystem,
+    SyncCollidersToPhysicsSystem, SyncParametersToPhysicsSystem};
 
 #[cfg(feature = "physics3d")]
 use nalgebra::Vector3 as Vector;
 
 #[cfg(feature = "physics2d")]
 use nalgebra::Vector2 as Vector;
+use nalgebra::RealField;
 
 pub mod bodies;
 pub mod colliders;
@@ -385,7 +385,7 @@ impl Parent for PhysicsParent {
 pub fn physics_dispatcher<'a, 'b, N, P>() -> Dispatcher<'a, 'b>
 where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     let mut dispatcher_builder = DispatcherBuilder::new();
     register_physics_systems::<N, P>(&mut dispatcher_builder);
@@ -399,7 +399,7 @@ where
 pub fn register_physics_systems<N, P>(dispatcher_builder: &mut DispatcherBuilder)
 where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     // add SyncBodiesToPhysicsSystem first since we have to start with bodies;
     // colliders can exist without a body but in most cases have a body parent
@@ -440,7 +440,7 @@ where
     );
 
     // add SyncBodiesFromPhysicsSystem last as it handles the
-    // synchronisation between nphysics World bodies and the Position
+    // synchronisation between nphysics World bodies and the Pose
     // components; this depends on the PhysicsStepperSystem
     dispatcher_builder.add(
         SyncBodiesFromPhysicsSystem::<N, P>::default(),

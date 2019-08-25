@@ -7,7 +7,7 @@ use specs::{
 
 use nalgebra::RealField;
 use crate::bodies::PhysicsBody;
-use crate::positon::Position;
+use crate::positon::Pose;
 use crate::Physics;
 
 use super::iterate_component_events;
@@ -25,7 +25,7 @@ pub struct SyncBodiesToPhysicsSystem<N, P> {
 impl<'s, N, P> System<'s> for SyncBodiesToPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     type SystemData = (
         ReadStorage<'s, P>,
@@ -36,7 +36,7 @@ where
     fn run(&mut self, data: Self::SystemData) {
         let (positions, mut physics, mut physics_bodies) = data;
 
-        // collect all ComponentEvents for the Position storage
+        // collect all ComponentEvents for the Pose storage
         let (inserted_positions, modified_positions, removed_positions) =
             iterate_component_events(&positions, self.positions_reader_id.as_mut().unwrap());
 
@@ -47,7 +47,7 @@ where
                 self.physics_bodies_reader_id.as_mut().unwrap(),
             );
 
-        // iterate over PhysicsBody and Position components with an id/Index that
+        // iterate over PhysicsBody and Pose components with an id/Index that
         // exists in either of the collected ComponentEvent BitSets
         for (position, mut physics_body, id) in (
             &positions,
@@ -95,7 +95,7 @@ where
         // initialise required resources
         res.entry::<Physics<N>>().or_insert_with(Physics::default);
 
-        // register reader id for the Position storage
+        // register reader id for the Pose storage
         let mut position_storage: WriteStorage<P> = SystemData::fetch(&res);
         self.positions_reader_id = Some(position_storage.register_reader());
 
@@ -108,7 +108,7 @@ where
 impl<N, P> Default for SyncBodiesToPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     fn default() -> Self {
         Self {
@@ -127,7 +127,7 @@ fn add_rigid_body<N, P>(
     physics_body: &mut PhysicsBody<N>,
 ) where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     // remove already existing bodies for this inserted component;
     // this technically should never happen but we need to keep the list of body
@@ -164,7 +164,7 @@ fn update_rigid_body<N, P>(
     modified_physics_bodies: &BitSet,
 ) where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     if let Some(rigid_body) = physics.world.rigid_body_mut(physics_body.handle.unwrap()) {
         // the PhysicsBody was modified, update everything but the position
@@ -172,7 +172,7 @@ fn update_rigid_body<N, P>(
             physics_body.apply_to_physics_world(rigid_body);
         }
 
-        // the Position was modified, update the position directly
+        // the Pose was modified, update the position directly
         if modified_positions.contains(id) {
             rigid_body.set_position(*position.isometry());
         }
@@ -187,7 +187,7 @@ fn update_rigid_body<N, P>(
 fn remove_rigid_body<N, P>(id: Index, physics: &mut Physics<N>)
 where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     if let Some(handle) = physics.body_handles.remove(&id) {
         // remove body if it still exists in the PhysicsWorld

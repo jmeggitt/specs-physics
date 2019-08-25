@@ -5,7 +5,7 @@ use specs::{
     SystemData, WriteExpect, WriteStorage,
 };
 
-use crate::positon::Position;
+use crate::positon::Pose;
 use crate::colliders::PhysicsCollider;
 use crate::{Physics, PhysicsParent};
 use nalgebra::RealField;
@@ -26,7 +26,7 @@ pub struct SyncCollidersToPhysicsSystem<N, P> {
 impl<'s, N, P> System<'s> for SyncCollidersToPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     type SystemData = (
         ReadStorage<'s, P>,
@@ -38,7 +38,7 @@ where
     fn run(&mut self, data: Self::SystemData) {
         let (positions, parent_entities, mut physics, mut physics_colliders) = data;
 
-        // collect all ComponentEvents for the Position storage
+        // collect all ComponentEvents for the Pose storage
         let (inserted_positions, ..) =
             iterate_component_events(&positions, self.positions_reader_id.as_mut().unwrap());
 
@@ -49,7 +49,7 @@ where
                 self.physics_colliders_reader_id.as_mut().unwrap(),
             );
 
-        // iterate over PhysicsCollider and Position components with an id/Index that
+        // iterate over PhysicsCollider and Pose components with an id/Index that
         // exists in either of the collected ComponentEvent BitSets
         for (position, parent_entity, mut physics_collider, id) in (
             &positions,
@@ -102,7 +102,7 @@ where
         // initialise required resources
         res.entry::<Physics<N>>().or_insert_with(Physics::default);
 
-        // register reader id for the Position storage
+        // register reader id for the Pose storage
         let mut position_storage: WriteStorage<P> = SystemData::fetch(&res);
         self.positions_reader_id = Some(position_storage.register_reader());
 
@@ -116,7 +116,7 @@ where
 impl<N, P> Default for SyncCollidersToPhysicsSystem<N, P>
 where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     fn default() -> Self {
         Self {
@@ -136,7 +136,7 @@ fn add_collider<N, P>(
     physics_collider: &mut PhysicsCollider<N>,
 ) where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     // remove already existing colliders for this inserted event
     if let Some(handle) = physics.collider_handles.remove(&id) {
@@ -175,7 +175,7 @@ fn add_collider<N, P>(
 
     // translation based on parent handle; if we did not have a valid parent and
     // ended up defaulting to BodyPartHandle::ground(), we'll need to take the
-    // Position into consideration
+    // Pose into consideration
     let translation = if parent_part_handle.is_ground() {
         // let scale = 1.0; may be added later
         let iso = &mut position.isometry().clone();
@@ -214,7 +214,7 @@ fn add_collider<N, P>(
 fn update_collider<N, P>(id: Index, physics: &mut Physics<N>, physics_collider: &PhysicsCollider<N>)
 where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     debug!("Modified PhysicsCollider with id: {}", id);
     let collider_handle = physics_collider.handle.unwrap();
@@ -232,7 +232,7 @@ where
 fn remove_collider<N, P>(id: Index, physics: &mut Physics<N>)
 where
     N: RealField,
-    P: Position<N>,
+    P: Pose<N>,
 {
     debug!("Removed PhysicsCollider with id: {}", id);
     if let Some(handle) = physics.collider_handles.remove(&id) {
