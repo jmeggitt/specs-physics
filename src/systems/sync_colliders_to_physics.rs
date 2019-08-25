@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use specs::{storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, Resources, System,
             SystemData, WriteExpect, WriteStorage};
 
-use crate::{colliders::PhysicsCollider, positon::Pose, Physics, PhysicsParent};
+use crate::{colliders::PhysicsCollider, pose::Pose, Physics, PhysicsParent};
 use nalgebra::RealField;
 use nphysics::object::{BodyPartHandle, ColliderDesc};
 

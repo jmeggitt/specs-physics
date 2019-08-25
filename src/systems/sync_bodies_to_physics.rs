@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use specs::{storage::ComponentEvent, world::Index, BitSet, Join, ReadStorage, ReaderId, Resources,
             System, SystemData, WriteExpect, WriteStorage};
 
-use crate::{bodies::PhysicsBody, positon::Pose, Physics};
+use crate::{bodies::PhysicsBody, pose::Pose, Physics};
 use nalgebra::RealField;
 
 use super::iterate_component_events;

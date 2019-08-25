@@ -253,7 +253,7 @@ use specs_hierarchy::Parent;
 
 pub use bodies::{PhysicsBody, PhysicsBodyBuilder};
 pub use colliders::{PhysicsCollider, PhysicsColliderBuilder};
-pub use positon::{Pose, SimplePosition};
+pub use pose::{Pose, SimplePosition};
 
 #[deprecated(
     since = "0.4.0",
@@ -282,7 +282,7 @@ pub mod bodies;
 pub mod colliders;
 pub mod events;
 pub mod parameters;
-pub mod positon;
+pub mod pose;
 pub mod systems;
 
 /// Resource holding the internal fields where physics computation occurs.
