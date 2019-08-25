@@ -9,7 +9,7 @@ use nalgebra::RealField;
 /// The `SyncParametersToPhysicsSystem` synchronises the simulation parameters
 /// with the nphysics `World`.
 pub struct SyncParametersToPhysicsSystem<N> {
-    n_marker: PhantomData<N>,
+    _phantom: PhantomData<N>,
 }
 
 impl<'s, N: RealField> System<'s> for SyncParametersToPhysicsSystem<N> {
@@ -70,7 +70,7 @@ where
 {
     fn default() -> Self {
         Self {
-            n_marker: PhantomData,
+            _phantom: PhantomData,
         }
     }
 }

@@ -13,9 +13,7 @@ use super::iterate_component_events;
 pub struct SyncBodiesToPhysicsSystem<N, P> {
     positions_reader_id: Option<ReaderId<ComponentEvent>>,
     physics_bodies_reader_id: Option<ReaderId<ComponentEvent>>,
-
-    n_marker: PhantomData<N>,
-    p_marker: PhantomData<P>,
+    _phantom: PhantomData<(N, P)>,
 }
 
 impl<'s, N, P> System<'s> for SyncBodiesToPhysicsSystem<N, P>
@@ -110,8 +108,7 @@ where
         Self {
             positions_reader_id: None,
             physics_bodies_reader_id: None,
-            n_marker: PhantomData,
-            p_marker: PhantomData,
+            _phantom: PhantomData,
         }
     }
 }

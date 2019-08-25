@@ -9,8 +9,7 @@ use nalgebra::RealField;
 /// the `RigidBody`s in the nphysics `World` with their Specs counterparts. This
 /// affects the `Pose` `Component` related to the `Entity`.
 pub struct SyncBodiesFromPhysicsSystem<N, P> {
-    n_marker: PhantomData<N>,
-    p_marker: PhantomData<P>,
+    _phantom: PhantomData<(N, P)>,
 }
 
 impl<'s, N, P> System<'s> for SyncBodiesFromPhysicsSystem<N, P>
@@ -54,8 +53,7 @@ where
 {
     fn default() -> Self {
         Self {
-            n_marker: PhantomData,
-            p_marker: PhantomData,
+            _phantom: PhantomData,
         }
     }
 }

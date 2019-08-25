@@ -12,7 +12,7 @@ use nphysics::world::ColliderWorld;
 
 /// The `PhysicsStepperSystem` progresses the nphysics `World`.
 pub struct PhysicsStepperSystem<N> {
-    n_marker: PhantomData<N>,
+    _phantom: PhantomData<N>,
 }
 
 impl<'s, N: RealField> System<'s> for PhysicsStepperSystem<N> {
@@ -123,7 +123,7 @@ where
 {
     fn default() -> Self {
         Self {
-            n_marker: PhantomData,
+            _phantom: PhantomData,
         }
     }
 }
