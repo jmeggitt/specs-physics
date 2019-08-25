@@ -52,8 +52,7 @@ where
                 | &inserted_physics_bodies
                 | &modified_physics_bodies
                 | &removed_physics_bodies,
-        )
-            .join()
+        ).join()
         {
             // handle inserted events
             if inserted_positions.contains(id) || inserted_physics_bodies.contains(id) {

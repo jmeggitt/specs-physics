@@ -284,6 +284,7 @@ pub mod events;
 pub mod parameters;
 pub mod pose;
 pub mod systems;
+pub mod system_data;
 
 /// Resource holding the internal fields where physics computation occurs.
 /// Some inspection methods are exposed to allow debugging.
