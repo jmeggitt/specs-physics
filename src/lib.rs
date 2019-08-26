@@ -4,26 +4,27 @@
 extern crate ncollide2d as ncollide;
 extern crate nphysics2d as nphysics;
 
-use amethyst_assets::Handle;
 use nalgebra::RealField;
 use nphysics2d::object::{Body, BodyHandle, BodySet, ColliderHandle, ColliderSet};
 use nphysics2d::world::{GeometricalWorld, MechanicalWorld};
 use specs::storage::{DenseVecStorage, FlaggedStorage, GenericWriteStorage, WriteStorage};
 use specs::world::Index;
-use specs::{Component, Entity, SystemData, World, WriteExpect};
+use specs::{Component, Entity, SystemData, World, WriteExpect, Join};
 use std::ops::{Deref, DerefMut};
 
-// TODO: Remove later (here for convenience)
-pub trait Real: RealField + Default {}
-impl<T: RealField + Default> Real for T {}
 
-#[allow(dead_code)]
 #[allow(unused_variables)]
-pub mod storageb;
-use storageb::{BodyStorage};
+pub mod storage;
+use storage::{BodyStorage};
 mod systems;
 
-pub struct PhysicsWorld<N: Real> {
+pub struct PhysicsWorld<N: RealField> {
     pub geometric: GeometricalWorld<N, Index, Index>,
     pub mechanical: MechanicalWorld<N, BodyStorage<N>, Index>,
+}
+
+impl<N: RealField> PhysicsWorld<N> {
+    pub fn split(&mut self) -> (&mut GeometricalWorld<N, Index, Index>, &mut MechanicalWorld<N, BodyStorage<N>, Index>) {
+        (&mut self.geometric, &mut self.mechanical)
+    }
 }

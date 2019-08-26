@@ -14,8 +14,5 @@ specs = "^0.14"
 specs-hierarchy = "^0.3"
 shrev = "^1.0"
 nalgebra = "^0.18"
-amethyst_core = "0.7.0"
-amethyst_error = "0.2.0"
-amethyst_assets = "0.8.0"
 hibitset = "^0.5.3"
 
