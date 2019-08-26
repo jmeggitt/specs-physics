@@ -1,0 +1,21 @@
+[package]
+name = "nphysics-ecs-test"
+version = "0.1.0"
+authors = ["Jasper Meggitt <jasper.meggitt@gmail.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+nphysics2d = "0.12.2"
+ncollide2d = "0.20.1"
+log = "^0.4.6"
+specs = "^0.14"
+specs-hierarchy = "^0.3"
+shrev = "^1.0"
+nalgebra = "^0.18"
+amethyst_core = "0.7.0"
+amethyst_error = "0.2.0"
+amethyst_assets = "0.8.0"
+hibitset = "^0.5.3"
+
