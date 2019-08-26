@@ -1,26 +1,23 @@
-use ncollide::pipeline::object::CollisionObjectSet;
-use nphysics::object::{Body, BodyPartHandle, BodySet, Collider, ColliderRemovalData, ColliderSet};
-use nphysics::joint::{JointConstraint, JointConstraintSet};
-use nphysics::force_generator::{ForceGenerator, ForceGeneratorSet};
-use specs::storage::DenseVecStorage;
-use specs::storage::DistinctStorage;
-use specs::storage::MaskedStorage;
-use specs::storage::{TryDefault, UnprotectedStorage};
-use specs::world::Index;
-use specs::{Component, Join};
-use specs::SystemData;
-use specs::storage::WriteStorage;
 use hibitset::{BitSet, BitSetLike};
 use nalgebra::RealField;
-use std::marker::PhantomData;
+use ncollide::pipeline::object::CollisionObjectSet;
+use nphysics::force_generator::{ForceGenerator, ForceGeneratorSet};
+use nphysics::joint::{JointConstraint, JointConstraintSet};
+use nphysics::object::{Body, BodyPartHandle, BodySet, Collider, ColliderRemovalData, ColliderSet};
+use specs::storage::DenseVecStorage;
+use specs::storage::UnprotectedStorage;
+use specs::world::Index;
+use specs::{Component, Join};
 use std::any::Any;
 use std::ops::{Deref, DerefMut};
 
 pub struct SpecsWrapper<T>(T);
 
 impl<T> Component for SpecsWrapper<T>
-    where PhysicsStorage<Self>: UnprotectedStorage<Self> + Send + Sync + Default,
-        Self: Any {
+where
+    PhysicsStorage<Self>: UnprotectedStorage<Self> + Send + Sync + Default,
+    Self: Any,
+{
     type Storage = PhysicsStorage<Self>;
 }
 
@@ -32,7 +29,7 @@ impl<T> Deref for SpecsWrapper<T> {
     }
 }
 
-impl <T> DerefMut for SpecsWrapper<T> {
+impl<T> DerefMut for SpecsWrapper<T> {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.0
     }
@@ -83,8 +80,10 @@ impl<T> Default for PhysicsStorage<T> {
 }
 
 impl<T> UnprotectedStorage<T> for PhysicsStorage<T> {
-    unsafe fn clean<B>(&mut self, has: B) where
-        B: BitSetLike {
+    unsafe fn clean<B>(&mut self, has: B)
+    where
+        B: BitSetLike,
+    {
         self.storage.clean(has)
     }
 
@@ -106,7 +105,6 @@ impl<T> UnprotectedStorage<T> for PhysicsStorage<T> {
 }
 
 pub type BodyStorage<N> = PhysicsStorage<SpecsWrapper<Box<dyn Body<N>>>>;
-
 
 impl<N: RealField> BodySet<N> for BodyStorage<N> {
     type Body = dyn Body<N>;
@@ -208,7 +206,9 @@ impl<N: RealField> ColliderSet<N, Index> for PhysicsStorage<SpecsWrapper<Collide
     }
 }
 
-impl<N: RealField> JointConstraintSet<N, BodyStorage<N>> for PhysicsStorage<SpecsWrapper<Box<dyn JointConstraint<N, BodyStorage<N>>>>> {
+impl<N: RealField> JointConstraintSet<N, BodyStorage<N>>
+    for PhysicsStorage<SpecsWrapper<Box<dyn JointConstraint<N, BodyStorage<N>>>>>
+{
     type JointConstraint = dyn JointConstraint<N, BodyStorage<N>>;
     type Handle = Index;
 
@@ -232,11 +232,23 @@ impl<N: RealField> JointConstraintSet<N, BodyStorage<N>> for PhysicsStorage<Spec
         unimplemented!()
     }
 
-    fn pop_insertion_event(&mut self) -> Option<(Self::Handle, BodyPartHandle<<BodyStorage<N> as BodySet<N>>::Handle>, BodyPartHandle<<BodyStorage<N> as BodySet<N>>::Handle>)> {
+    fn pop_insertion_event(
+        &mut self,
+    ) -> Option<(
+        Self::Handle,
+        BodyPartHandle<<BodyStorage<N> as BodySet<N>>::Handle>,
+        BodyPartHandle<<BodyStorage<N> as BodySet<N>>::Handle>,
+    )> {
         unimplemented!()
     }
 
-    fn pop_removal_event(&mut self) -> Option<(Self::Handle, BodyPartHandle<<BodyStorage<N> as BodySet<N>>::Handle>, BodyPartHandle<<BodyStorage<N> as BodySet<N>>::Handle>)> {
+    fn pop_removal_event(
+        &mut self,
+    ) -> Option<(
+        Self::Handle,
+        BodyPartHandle<<BodyStorage<N> as BodySet<N>>::Handle>,
+        BodyPartHandle<<BodyStorage<N> as BodySet<N>>::Handle>,
+    )> {
         unimplemented!()
     }
 
@@ -245,7 +257,9 @@ impl<N: RealField> JointConstraintSet<N, BodyStorage<N>> for PhysicsStorage<Spec
     }
 }
 
-impl<N: RealField> ForceGeneratorSet<N, BodyStorage<N>> for PhysicsStorage<SpecsWrapper<Box<dyn ForceGenerator<N, BodyStorage<N>>>>> {
+impl<N: RealField> ForceGeneratorSet<N, BodyStorage<N>>
+    for PhysicsStorage<SpecsWrapper<Box<dyn ForceGenerator<N, BodyStorage<N>>>>>
+{
     type ForceGenerator = dyn ForceGenerator<N, BodyStorage<N>>;
     type Handle = Index;
 
