@@ -446,20 +446,3 @@ where
         &["physics_stepper_system"],
     );
 }
-
-#[cfg(feature = "amethyst")]
-use amethyst_core::bundle::SystemBundle;
-#[cfg(feature = "amethyst")]
-use amethyst_error::Error;
-
-#[cfg(feature = "amethyst")]
-#[derive(Default)]
-pub struct PhysicsBundle;
-
-#[cfg(feature = "amethyst")]
-impl SystemBundle for PhysicsBundle {
-    fn build(self, dispatcher: &mut DispatcherBuilder) -> Result<(), Error> {
-        register_physics_systems(dispatcher);
-        Ok(())
-    }
-}

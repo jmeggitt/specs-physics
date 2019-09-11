@@ -134,7 +134,7 @@ fn add_rigid_body<N, P>(
     // handle for later usage
     let handle = physics_body
         .to_rigid_body_desc()
-        .position(*position.isometry())
+        .position(position.isometry())
         .user_data(id)
         .build(&mut physics.world)
         .handle();
@@ -167,7 +167,7 @@ fn update_rigid_body<N, P>(
 
         // the Pose was modified, update the position directly
         if modified_positions.contains(id) {
-            rigid_body.set_position(*position.isometry());
+            rigid_body.set_position(position.isometry());
         }
 
         trace!(
