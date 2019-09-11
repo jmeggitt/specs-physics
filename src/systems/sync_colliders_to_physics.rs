@@ -171,9 +171,8 @@ fn add_collider<N, P>(
     let translation = if parent_part_handle.is_ground() {
         // let scale = 1.0; may be added later
         let iso = &mut position.isometry().clone();
-        iso.translation.vector +=
-            iso.rotation * physics_collider.offset_from_parent.translation.vector; //.component_mul(scale);
-        iso.rotation *= physics_collider.offset_from_parent.rotation;
+        iso.translation.vector = physics_collider.offset_from_parent.translation.vector; //.component_mul(scale);
+        iso.rotation = physics_collider.offset_from_parent.rotation;
         *iso
     } else {
         physics_collider.offset_from_parent
