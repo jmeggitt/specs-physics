@@ -1,0 +1,3 @@
+{
+    "rust.features": ["amethyst", "physics2d"]
+}

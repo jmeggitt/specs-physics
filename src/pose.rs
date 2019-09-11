@@ -6,7 +6,7 @@ use std::ops::{Deref, DerefMut};
 use nalgebra::{Isometry3 as Isometry, Point3 as Point};
 
 #[cfg(feature = "physics2d")]
-use nalgebra::{Isometry2 as Isometry, Point2 as Point};
+use nalgebra::{Isometry2 as Isometry, Point2 as Point, UnitComplex, Translation2};
 
 /// A `Pose` is a position and an orientation. They are wrapped together into an
 /// isometry for use in the physics engine.
@@ -20,8 +20,8 @@ use nalgebra::{Isometry2 as Isometry, Point2 as Point};
 pub trait Pose<N: RealField>:
     Component<Storage = FlaggedStorage<Self, DenseVecStorage<Self>>> + Send + Sync
 {
-    fn isometry(&self) -> &Isometry<N>;
-    fn isometry_mut(&mut self) -> &mut Isometry<N>;
+    fn isometry(&self) -> Isometry<N>;
+    fn set_isometry(&mut self, isometry: Isometry<N>) -> &mut Self;
 
     /// Helper function to extract the location of this `Pose`. Using
     /// `Pose::isometry()` is preferable, but can be harder to work with.
@@ -42,25 +42,45 @@ pub trait Pose<N: RealField>:
 }
 
 #[cfg(feature = "amethyst")]
+#[cfg(feature = "physics3d")]
 impl Pose<f32> for amethyst_core::Transform {
-    fn isometry(&self) -> &Isometry<f32> {
-        self.isometry()
+    fn isometry(&self) -> Isometry3<f32> {
+        *self.isometry()
     }
 
-    fn isometry_mut(&mut self) -> &mut Isometry<f32> {
-        self.isometry_mut()
+    fn set_isometry(&mut self, isometry: &Isometry3<f32>) -> &mut Self {
+        self.set_isometry(*isometry)
+    }
+}
+
+#[cfg(feature = "amethyst")]
+#[cfg(feature = "physics2d")]
+impl Pose<f32> for amethyst_core::Transform {
+    fn isometry(&self) -> Isometry<f32> {
+        let iso3 = self.isometry();
+        let translation = Translation2::new(iso3.translation.x, iso3.translation.y);
+        let rotation = UnitComplex::new(iso3.rotation.angle());
+        Isometry::from_parts(translation, rotation)
+    }
+
+    fn set_isometry(&mut self, isometry: Isometry<f32>) -> &mut Self {
+        self.set_rotation_2d(isometry.rotation.angle());
+        self.set_translation_x(isometry.translation.x);
+        self.set_translation_y(isometry.translation.y);
+        self
     }
 }
 
 pub struct SimplePosition<N: RealField>(pub Isometry<N>);
 
 impl<N: RealField> Pose<N> for SimplePosition<N> {
-    fn isometry(&self) -> &Isometry<N> {
-        &self.0
+    fn isometry(&self) -> Isometry<N> {
+        self.0
     }
 
-    fn isometry_mut(&mut self) -> &mut Isometry<N> {
-        &mut self.0
+    fn set_isometry(&mut self, isometry: Isometry<N>) -> &mut Self {
+        self.0 = isometry;
+        self
     }
 }
 
