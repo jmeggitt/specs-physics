@@ -1,7 +1,9 @@
 use std::marker::PhantomData;
 
-use specs::{storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, Resources, System,
-            SystemData, WriteExpect, WriteStorage};
+use specs::{
+    storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, Resources, System,
+    SystemData, WriteExpect, WriteStorage,
+};
 
 use crate::{colliders::PhysicsCollider, pose::Pose, Physics, PhysicsParent};
 use nalgebra::RealField;
@@ -171,8 +173,9 @@ fn add_collider<N, P>(
     let translation = if parent_part_handle.is_ground() {
         // let scale = 1.0; may be added later
         let iso = &mut position.isometry().clone();
-        iso.translation.vector = physics_collider.offset_from_parent.translation.vector; //.component_mul(scale);
-        iso.rotation = physics_collider.offset_from_parent.rotation;
+        iso.translation.vector +=
+            iso.rotation * physics_collider.offset_from_parent.translation.vector; //.component_mul(scale);
+        iso.rotation *= physics_collider.offset_from_parent.rotation;
         *iso
     } else {
         physics_collider.offset_from_parent
@@ -243,8 +246,10 @@ where
 mod tests {
     use specs::{world::Builder, DispatcherBuilder, World};
 
-    use crate::{colliders::Shape, systems::SyncCollidersToPhysicsSystem, Physics,
-                PhysicsColliderBuilder, SimplePosition};
+    use crate::{
+        colliders::Shape, systems::SyncCollidersToPhysicsSystem, Physics, PhysicsColliderBuilder,
+        SimplePosition,
+    };
     use nalgebra::Isometry3;
 
     #[test]
