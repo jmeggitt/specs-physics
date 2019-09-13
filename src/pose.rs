@@ -6,7 +6,10 @@ use std::ops::{Deref, DerefMut};
 use nalgebra::{Isometry3 as Isometry, Point3 as Point};
 
 #[cfg(feature = "physics2d")]
-use nalgebra::{Isometry2 as Isometry, Point2 as Point, UnitComplex, Translation2};
+use nalgebra::{
+    Isometry2 as Isometry, Point2 as Point, Translation2, Unit, UnitComplex, UnitQuaternion,
+    Vector3, Isometry3
+};
 
 /// A `Pose` is a position and an orientation. They are wrapped together into an
 /// isometry for use in the physics engine.
@@ -59,12 +62,15 @@ impl Pose<f32> for amethyst_core::Transform {
     fn isometry(&self) -> Isometry<f32> {
         let iso3 = self.isometry();
         let translation = Translation2::new(iso3.translation.x, iso3.translation.y);
-        let rotation = UnitComplex::new(iso3.rotation.angle());
+        let angle = iso3.rotation.euler_angles();
+        let rotation = UnitComplex::new(angle.2);
         Isometry::from_parts(translation, rotation)
     }
 
     fn set_isometry(&mut self, isometry: Isometry<f32>) -> &mut Self {
-        self.set_rotation_2d(isometry.rotation.angle());
+        let z_angle = isometry.rotation.angle();
+        let euler_angles = self.rotation().euler_angles();
+        self.set_rotation_euler(euler_angles.0, euler_angles.1, z_angle);
         self.set_translation_x(isometry.translation.x);
         self.set_translation_y(isometry.translation.y);
         self
