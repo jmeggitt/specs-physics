@@ -271,12 +271,8 @@ use nphysics::{counters::Counters,
 use systems::{PhysicsStepperSystem, SyncBodiesFromPhysicsSystem, SyncBodiesToPhysicsSystem,
               SyncCollidersToPhysicsSystem, SyncParametersToPhysicsSystem};
 
-#[cfg(feature = "physics3d")]
-use nalgebra::Vector3 as Vector;
-
 use nalgebra::RealField;
-#[cfg(feature = "physics2d")]
-use nalgebra::Vector2 as Vector;
+use nphysics::math::Vector;
 
 pub mod bodies;
 pub mod colliders;
@@ -292,7 +288,7 @@ pub struct Physics<N: RealField> {
     /// Also contains ColliderWorld.
     pub(crate) world: World<N>,
 
-    /// Hashmap of Entities to internal Physics bodies.
+    /// Hashmap of Entities to internal Physics bodies.q
     /// Necessary for reacting to removed Components.
     pub(crate) body_handles: HashMap<Index, BodyHandle>,
     /// Hashmap of Entities to internal Collider handles.

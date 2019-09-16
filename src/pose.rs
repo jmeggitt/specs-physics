@@ -2,14 +2,10 @@ use nalgebra::RealField;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 use std::ops::{Deref, DerefMut};
 
-#[cfg(feature = "physics3d")]
-use nalgebra::{Isometry3 as Isometry, Point3 as Point};
+use nphysics::math::{Isometry, Point};
 
 #[cfg(feature = "physics2d")]
-use nalgebra::{
-    Isometry2 as Isometry, Point2 as Point, Translation2, Unit, UnitComplex, UnitQuaternion,
-    Vector3, Isometry3
-};
+use nalgebra::{Translation2, Unit, UnitComplex, UnitQuaternion, Vector3, Isometry3};
 
 /// A `Pose` is a position and an orientation. They are wrapped together into an
 /// isometry for use in the physics engine.

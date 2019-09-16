@@ -2,18 +2,13 @@ use nalgebra::RealField;
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 #[cfg(feature = "physics3d")]
-use nalgebra::{Matrix3, Point3 as Point};
+use nalgebra::Matrix3;
 
-#[cfg(feature = "physics2d")]
-use nalgebra::Point2 as Point;
-
-#[cfg(feature = "physics3d")]
-use nphysics::{algebra::{Force3 as Force, ForceType, Velocity3 as Velocity},
+use nphysics::{math::{Force, ForceType, Velocity, Point},
                object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc}};
 
-#[cfg(feature = "physics2d")]
-use nphysics::{algebra::{Force2 as Force, ForceType, Velocity2 as Velocity},
-               object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc}};
+// Note: `nphysics::math::AngularInertia` could have been used in this file, but it uses a 1x1
+// matrix in 2d which is inconvenient.
 
 /// The `PhysicsBody` `Component` represents a `PhysicsWorld` `RigidBody` in
 /// Specs and contains all the data required for the synchronisation between

@@ -6,12 +6,7 @@ use std::ops::{Deref, DerefMut};
 
 use nalgebra::{convert, RealField, Scalar};
 use nphysics::solver::IntegrationParameters;
-
-#[cfg(feature = "physics3d")]
-use nalgebra::Vector3 as Vector;
-
-#[cfg(feature = "physics2d")]
-use nalgebra::Vector2 as Vector;
+use nphysics::math::Vector;
 
 /// The `TimeStep` is used to set the timestep of the nphysics integration, see
 /// `nphysics::world::World::set_timestep(..)`.

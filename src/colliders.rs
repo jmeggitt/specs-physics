@@ -7,16 +7,18 @@ use ncollide::shape::{Ball, Capsule, Compound, Cuboid, HeightField, Plane, Polyl
                       ShapeHandle};
 use ncollide::world::CollisionGroups;
 use nphysics::material::{BasicMaterial, MaterialHandle};
+use nphysics::math::{Isometry, Point, Vector};
 use nphysics::object::ColliderHandle;
 
 #[cfg(feature = "physics3d")]
 use ncollide::shape::{ConvexHull, TriMesh, Triangle};
 
 #[cfg(feature = "physics3d")]
-use nalgebra::{DMatrix, Isometry3 as Isometry, Point3 as Point, Vector3 as Vector};
+use nalgebra::DMatrix;
 
 #[cfg(feature = "physics2d")]
-use nalgebra::{DVector, Isometry2 as Isometry, Point2 as Point, Vector2 as Vector};
+use nalgebra::DVector;
+
 
 pub type MeshData<N> = (Vec<Point3<N>>, Vec<Point3<usize>>, Option<Vec<Point2<N>>>);
 
