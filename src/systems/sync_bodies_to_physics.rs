@@ -5,6 +5,7 @@ use specs::{storage::ComponentEvent, world::Index, BitSet, Join, ReadStorage, Re
 
 use crate::{bodies::PhysicsBody, pose::Pose, Physics};
 use nalgebra::RealField;
+use nphysics::object::DefaultBodySet;
 
 use super::iterate_component_events;
 
@@ -24,11 +25,12 @@ where
     type SystemData = (
         ReadStorage<'s, P>,
         WriteExpect<'s, Physics<N>>,
+        WriteExpect<'s, DefaultBodySet<N>>,
         WriteStorage<'s, PhysicsBody<N>>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (positions, mut physics, mut physics_bodies) = data;
+        let (positions, mut physics, mut bodies, mut physics_bodies) = data;
 
         // collect all ComponentEvents for the Pose storage
         let (inserted_positions, modified_positions, removed_positions) =
@@ -58,7 +60,13 @@ where
             // handle inserted events
             if inserted_positions.contains(id) || inserted_physics_bodies.contains(id) {
                 debug!("Inserted PhysicsBody with id: {}", id);
-                add_rigid_body::<N, P>(id, &position, &mut physics, &mut physics_body);
+                add_rigid_body::<N, P>(
+                    id,
+                    &position,
+                    &mut physics,
+                    &mut physics_body,
+                    &mut *bodies,
+                );
             }
 
             // handle modified events
@@ -67,8 +75,8 @@ where
                 update_rigid_body::<N, P>(
                     id,
                     &position,
-                    &mut physics,
                     &mut physics_body,
+                    &mut *bodies,
                     &modified_positions,
                     &modified_physics_bodies,
                 );
@@ -77,7 +85,7 @@ where
             // handle removed events
             if removed_positions.contains(id) || removed_physics_bodies.contains(id) {
                 debug!("Removed PhysicsBody with id: {}", id);
-                remove_rigid_body::<N, P>(id, &mut physics);
+                remove_rigid_body::<N, P>(id, &mut physics, &mut *bodies);
             }
         }
     }
@@ -118,6 +126,7 @@ fn add_rigid_body<N, P>(
     position: &P,
     physics: &mut Physics<N>,
     physics_body: &mut PhysicsBody<N>,
+    bodies: &mut DefaultBodySet<N>,
 ) where
     N: RealField,
     P: Pose<N>,
@@ -127,17 +136,17 @@ fn add_rigid_body<N, P>(
     // handles clean
     if let Some(body_handle) = physics.body_handles.remove(&id) {
         warn!("Removing orphaned body handle: {:?}", body_handle);
-        physics.world.remove_bodies(&[body_handle]);
+        bodies.remove(body_handle);
     }
 
     // create a new RigidBody in the PhysicsWorld and store its
     // handle for later usage
-    let handle = physics_body
+    let body = physics_body
         .to_rigid_body_desc()
         .position(position.isometry())
         .user_data(id)
-        .build(&mut physics.world)
-        .handle();
+        .build();
+    let handle = bodies.insert(body);
 
     physics_body.handle = Some(handle);
     physics.body_handles.insert(id, handle);
@@ -151,15 +160,15 @@ fn add_rigid_body<N, P>(
 fn update_rigid_body<N, P>(
     id: Index,
     position: &P,
-    physics: &mut Physics<N>,
     physics_body: &mut PhysicsBody<N>,
+    bodies: &mut DefaultBodySet<N>,
     modified_positions: &BitSet,
     modified_physics_bodies: &BitSet,
 ) where
     N: RealField,
     P: Pose<N>,
 {
-    if let Some(rigid_body) = physics.world.rigid_body_mut(physics_body.handle.unwrap()) {
+    if let Some(rigid_body) = bodies.rigid_body_mut(physics_body.handle.unwrap()) {
         // the PhysicsBody was modified, update everything but the position
         if modified_physics_bodies.contains(id) {
             physics_body.apply_to_physics_world(rigid_body);
@@ -177,14 +186,14 @@ fn update_rigid_body<N, P>(
     }
 }
 
-fn remove_rigid_body<N, P>(id: Index, physics: &mut Physics<N>)
+fn remove_rigid_body<N, P>(id: Index, physics: &mut Physics<N>, bodies: &mut DefaultBodySet<N>)
 where
     N: RealField,
     P: Pose<N>,
 {
     if let Some(handle) = physics.body_handles.remove(&id) {
         // remove body if it still exists in the PhysicsWorld
-        physics.world.remove_bodies(&[handle]);
+        bodies.remove(handle);
         info!("Removed rigid body from world with id: {}", id);
     }
 }

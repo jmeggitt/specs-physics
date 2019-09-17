@@ -31,25 +31,23 @@ impl<'s, N: RealField> System<'s> for SyncParametersToPhysicsSystem<N> {
                     physics.gravity(),
                     gravity.0
                 );
-                physics.world.set_gravity(gravity.0);
+                physics.mechanical_world.gravity = gravity.0;
             }
         }
 
         if let Some(enable_profiling) = profiling {
             if enable_profiling.0 != physics.performance_counters().enabled() {
-                if enable_profiling.0 {
-                    info!("Physics performance counters enabled.");
-                    physics.world.enable_performance_counters();
-                } else {
-                    info!("Physics performance counters disabled.");
-                    physics.world.disable_performance_counters();
-                }
+                info!(
+                    "Physics performance counters.enabled={:}",
+                    enable_profiling.0
+                );
+                physics.mechanical_world.counters.enabled = enable_profiling.0;
             }
         }
 
         if let Some(params) = integration_params {
             if *params != *physics.integration_parameters() {
-                params.apply(physics.world.integration_parameters_mut());
+                params.apply(&mut physics.mechanical_world.integration_parameters);
                 info!("Integration parameters have been updated.");
             }
         }

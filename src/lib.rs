@@ -264,9 +264,10 @@ pub trait Position<N: RealField>: Pose<N> {}
 
 use nphysics::{counters::Counters,
                material::MaterialsCoefficientsTable,
-               object::{BodyHandle, ColliderHandle},
-               solver::IntegrationParameters,
-               world::World};
+               object::{DefaultBodyHandle, DefaultColliderHandle},
+               solver::IntegrationParameters};
+
+use nphysics::world::{DefaultGeometricalWorld, DefaultMechanicalWorld};
 
 use systems::{PhysicsStepperSystem, SyncBodiesFromPhysicsSystem, SyncBodiesToPhysicsSystem,
               SyncCollidersToPhysicsSystem, SyncParametersToPhysicsSystem};
@@ -285,15 +286,15 @@ pub mod systems;
 /// Some inspection methods are exposed to allow debugging.
 pub struct Physics<N: RealField> {
     /// Core structure where physics computation and synchronization occurs.
-    /// Also contains ColliderWorld.
-    pub(crate) world: World<N>,
-
+    pub(crate) mechanical_world: DefaultMechanicalWorld<N>,
+    /// Core structure where physics computation and synchronization occurs.
+    pub(crate) geometric_world: DefaultGeometricalWorld<N>,
     /// Hashmap of Entities to internal Physics bodies.q
     /// Necessary for reacting to removed Components.
-    pub(crate) body_handles: HashMap<Index, BodyHandle>,
+    pub(crate) body_handles: HashMap<Index, DefaultBodyHandle>,
     /// Hashmap of Entities to internal Collider handles.
     /// Necessary for reacting to removed Components.
-    pub(crate) collider_handles: HashMap<Index, ColliderHandle>,
+    pub(crate) collider_handles: HashMap<Index, DefaultColliderHandle>,
 }
 
 // Some non-mutating methods for diagnostics and testing
@@ -306,45 +307,40 @@ impl<N: RealField> Physics<N> {
     /// Reports the internal value for the timestep.
     /// See also `TimeStep` for setting this value.
     pub fn timestep(&self) -> N {
-        self.world.timestep()
+        self.mechanical_world.timestep()
     }
 
     /// Reports the internal value for the gravity.
     /// See also `Gravity` for setting this value.
     pub fn gravity(&self) -> &Vector<N> {
-        self.world.gravity()
-    }
-
-    /// Reports the internal value for prediction distance in collision
-    /// detection. This cannot change and will normally be `0.002m`
-    pub fn prediction(&self) -> N {
-        self.world.prediction()
+        &self.mechanical_world.gravity
     }
 
     /// Retrieves the performance statistics for the last simulated timestep.
     /// Profiling is disabled by default.
     /// See also `PhysicsProfilingEnabled` for enabling performance counters.
     pub fn performance_counters(&self) -> &Counters {
-        self.world.performance_counters()
+        &self.mechanical_world.counters
     }
 
     /// Retrieves the internal parameters for integration.
     /// See also `PhysicsIntegrationParameters` for setting these parameters.
     pub fn integration_parameters(&self) -> &IntegrationParameters<N> {
-        self.world.integration_parameters()
+        &self.mechanical_world.integration_parameters
     }
 
     /// Retrieves the internal lookup table for friction and restitution
     /// constants. Exposing this for modification is TODO.
     pub fn materials_coefficients_table(&self) -> &MaterialsCoefficientsTable<N> {
-        self.world.materials_coefficients_table()
+        &self.mechanical_world.material_coefficients
     }
 }
 
 impl<N: RealField> Default for Physics<N> {
     fn default() -> Self {
         Self {
-            world: World::new(),
+            mechanical_world: DefaultMechanicalWorld::new(Vector::zeros()),
+            geometric_world: DefaultGeometricalWorld::new(),
             body_handles: HashMap::new(),
             collider_handles: HashMap::new(),
         }

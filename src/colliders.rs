@@ -3,12 +3,12 @@ use std::{f32::consts::PI, fmt, ops::Deref};
 use specs::{Component, DenseVecStorage, FlaggedStorage};
 
 use nalgebra::{Point2, Point3, RealField, Unit};
+use ncollide::pipeline::CollisionGroups;
 use ncollide::shape::{Ball, Capsule, Compound, Cuboid, HeightField, Plane, Polyline, Segment,
                       ShapeHandle};
-use ncollide::world::CollisionGroups;
 use nphysics::material::{BasicMaterial, MaterialHandle};
 use nphysics::math::{Isometry, Point, Vector};
-use nphysics::object::ColliderHandle;
+use nphysics::object::DefaultColliderHandle;
 
 #[cfg(feature = "physics3d")]
 use ncollide::shape::{ConvexHull, TriMesh, Triangle};
@@ -18,7 +18,6 @@ use nalgebra::DMatrix;
 
 #[cfg(feature = "physics2d")]
 use nalgebra::DVector;
-
 
 pub type MeshData<N> = (Vec<Point3<N>>, Vec<Point3<usize>>, Option<Vec<Point2<N>>>);
 
@@ -105,10 +104,7 @@ impl<N: RealField> Shape<N> {
                 radius,
             } => ShapeHandle::new(Capsule::new(*half_height, *radius)),
             Shape::Compound { parts } => ShapeHandle::new(Compound::new(
-                parts
-                    .into_iter()
-                    .map(|part| (part.0, part.1.handle()))
-                    .collect(),
+                parts.iter().map(|part| (part.0, part.1.handle())).collect(),
             )),
             #[cfg(feature = "physics3d")]
             Shape::ConvexHull { points } => ShapeHandle::new(
@@ -143,7 +139,7 @@ impl<N: RealField> Shape<N> {
 /// the physic worlds `Collider`.
 #[derive(Clone)]
 pub struct PhysicsCollider<N: RealField> {
-    pub(crate) handle: Option<ColliderHandle>,
+    pub(crate) handle: Option<DefaultColliderHandle>,
     pub shape: Shape<N>,
     pub offset_from_parent: Isometry<N>,
     pub density: N,

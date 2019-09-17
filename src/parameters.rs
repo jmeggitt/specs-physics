@@ -5,8 +5,8 @@
 use std::ops::{Deref, DerefMut};
 
 use nalgebra::{convert, RealField, Scalar};
-use nphysics::solver::IntegrationParameters;
 use nphysics::math::Vector;
+use nphysics::solver::IntegrationParameters;
 
 /// The `TimeStep` is used to set the timestep of the nphysics integration, see
 /// `nphysics::world::World::set_timestep(..)`.

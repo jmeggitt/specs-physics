@@ -1,13 +1,11 @@
 use std::marker::PhantomData;
 
-use specs::{
-    storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, Resources, System,
-    SystemData, WriteExpect, WriteStorage,
-};
+use specs::{storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, Resources, System,
+            SystemData, WriteExpect, WriteStorage};
 
 use crate::{colliders::PhysicsCollider, pose::Pose, Physics, PhysicsParent};
 use nalgebra::RealField;
-use nphysics::object::{BodyPartHandle, ColliderDesc};
+use nphysics::object::{BodyPartHandle, ColliderDesc, DefaultColliderSet};
 
 use super::iterate_component_events;
 
@@ -28,11 +26,18 @@ where
         ReadStorage<'s, P>,
         ReadStorage<'s, PhysicsParent>,
         WriteExpect<'s, Physics<N>>,
+        WriteExpect<'s, DefaultColliderSet<N>>,
         WriteStorage<'s, PhysicsCollider<N>>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (positions, parent_entities, mut physics, mut physics_colliders) = data;
+        let (
+            positions,
+            parent_entities,
+            mut physics,
+            mut colliders,
+            mut physics_colliders,
+        ) = data;
 
         // collect all ComponentEvents for the Pose storage
         let (inserted_positions, ..) =
@@ -67,19 +72,37 @@ where
                     &position,
                     &mut physics,
                     physics_collider.get_mut_unchecked(),
+                    &mut *colliders,
                 );
             }
 
             // handle modified events
             if modified_physics_colliders.contains(id) {
-                debug!("Modified PhysicsCollider with id: {}", id);
-                update_collider::<N, P>(id, &mut physics, physics_collider.get_unchecked());
+                let physics_collider = physics_collider.get_unchecked();
+                let collider_handle = physics_collider.handle.unwrap();
+
+                colliders
+                    .get_mut(collider_handle)
+                    .unwrap()
+                    .set_collision_groups(physics_collider.collision_groups);
+                debug!(
+                    "Updated collider with id {:?} with values: {:?}",
+                    id, physics_collider
+                );
             }
 
             // handle removed events
             if removed_physics_colliders.contains(id) {
                 debug!("Removed PhysicsCollider with id: {}", id);
-                remove_collider::<N, P>(id, &mut physics);
+                if let Some(handle) = physics.collider_handles.remove(&id) {
+                    // we have to check if the collider still exists in the nphysics World before
+                    // attempting to delete it as removing a collider that does not exist anymore
+                    // causes the nphysics World to panic; colliders are implicitly removed when a
+                    // parent body is removed so this is actually a valid scenario
+                    if colliders.get(handle).is_some() {
+                        colliders.remove(handle);
+                    }
+                }
             }
         }
 
@@ -128,6 +151,7 @@ fn add_collider<N, P>(
     position: &P,
     physics: &mut Physics<N>,
     physics_collider: &mut PhysicsCollider<N>,
+    colliders: &mut DefaultColliderSet<N>,
 ) where
     N: RealField,
     P: Pose<N>,
@@ -135,55 +159,25 @@ fn add_collider<N, P>(
     // remove already existing colliders for this inserted event
     if let Some(handle) = physics.collider_handles.remove(&id) {
         warn!("Removing orphaned collider handle: {:?}", handle);
-        physics.world.remove_colliders(&[handle]);
+        colliders.remove(handle);
     }
 
-    // attempt to find an existing RigidBody for this Index; if one exists we'll
-    // fetch its BodyPartHandle and use it as the Colliders parent in the
-    // nphysics World
-    let parent_part_handle = match physics.body_handles.get(&id) {
-        Some(parent_handle) => physics
-            .world
-            .rigid_body(*parent_handle)
-            .map_or(BodyPartHandle::ground(), |body| body.part_handle()),
-        None => {
-            // if BodyHandle was found for the current Entity/Index, check for a potential
-            // parent Entity and repeat the first step
-            if let Some(parent_entity) = parent_entity {
-                match physics.body_handles.get(&parent_entity.entity.id()) {
-                    Some(parent_handle) => physics
-                        .world
-                        .rigid_body(*parent_handle)
-                        .map_or(BodyPartHandle::ground(), |body| body.part_handle()),
-                    None => {
-                        // ultimately default to BodyPartHandle::ground()
-                        BodyPartHandle::ground()
-                    }
-                }
-            } else {
-                // no parent Entity exists, default to BodyPartHandle::ground()
-                BodyPartHandle::ground()
-            }
+    // Don't allow mis-matched colliders and bodies
+    let parent_part_handle = match (physics.body_handles.get(&id), parent_entity) {
+        (Some(x), _) => x,
+        (_, Some(x)) if physics.body_handles.contains_key(&x.entity.id()) => {
+            physics.body_handles.get(&x.entity.id()).unwrap()
+        }
+        _ => {
+            error!("Attempted to add a collider to nonexistent body! Skipping...");
+            return;
         }
     };
 
-    // translation based on parent handle; if we did not have a valid parent and
-    // ended up defaulting to BodyPartHandle::ground(), we'll need to take the
-    // Pose into consideration
-    let translation = if parent_part_handle.is_ground() {
-        // let scale = 1.0; may be added later
-        let iso = &mut position.isometry().clone();
-        iso.translation.vector +=
-            iso.rotation * physics_collider.offset_from_parent.translation.vector; //.component_mul(scale);
-        iso.rotation *= physics_collider.offset_from_parent.rotation;
-        *iso
-    } else {
-        physics_collider.offset_from_parent
-    };
-
-    // create the actual Collider in the nphysics World and fetch its handle
-    let handle = ColliderDesc::new(physics_collider.shape_handle())
-        .position(translation)
+    // Create the Collider and fetch its handle. We know the body part handle will
+    // always have index 0 due to ecs requirement.
+    let collider = ColliderDesc::new(physics_collider.shape_handle())
+        .position(position.isometry() * physics_collider.offset_from_parent)
         .density(physics_collider.density)
         .material(physics_collider.material.clone())
         .margin(physics_collider.margin)
@@ -192,9 +186,9 @@ fn add_collider<N, P>(
         .angular_prediction(physics_collider.angular_prediction)
         .sensor(physics_collider.sensor)
         .user_data(id)
-        .build_with_parent(parent_part_handle, &mut physics.world)
-        .unwrap()
-        .handle();
+        .build(BodyPartHandle(*parent_part_handle, 0));
+
+    let handle = colliders.insert(collider);
 
     physics_collider.handle = Some(handle);
     physics.collider_handles.insert(id, handle);
@@ -205,51 +199,12 @@ fn add_collider<N, P>(
     );
 }
 
-fn update_collider<N, P>(id: Index, physics: &mut Physics<N>, physics_collider: &PhysicsCollider<N>)
-where
-    N: RealField,
-    P: Pose<N>,
-{
-    debug!("Modified PhysicsCollider with id: {}", id);
-    let collider_handle = physics_collider.handle.unwrap();
-    let collider_world = physics.world.collider_world_mut();
-
-    // update collision groups
-    collider_world.set_collision_groups(collider_handle, physics_collider.collision_groups);
-
-    info!(
-        "Updated collider in world with values: {:?}",
-        physics_collider
-    );
-}
-
-fn remove_collider<N, P>(id: Index, physics: &mut Physics<N>)
-where
-    N: RealField,
-    P: Pose<N>,
-{
-    debug!("Removed PhysicsCollider with id: {}", id);
-    if let Some(handle) = physics.collider_handles.remove(&id) {
-        // we have to check if the collider still exists in the nphysics World before
-        // attempting to delete it as removing a collider that does not exist anymore
-        // causes the nphysics World to panic; colliders are implicitly removed when a
-        // parent body is removed so this is actually a valid scenario
-        if physics.world.collider(handle).is_some() {
-            physics.world.remove_colliders(&[handle]);
-        }
-
-        info!("Removed collider from world with id: {}", id);
-    }
-}
-
 #[cfg(all(test, feature = "physics3d"))]
 mod tests {
     use specs::{world::Builder, DispatcherBuilder, World};
 
-    use crate::{
-        colliders::Shape, systems::SyncCollidersToPhysicsSystem, Physics, PhysicsColliderBuilder,
-        SimplePosition,
-    };
+    use crate::{colliders::Shape, systems::SyncCollidersToPhysicsSystem, Physics,
+                PhysicsColliderBuilder, SimplePosition};
     use nalgebra::Isometry3;
 
     #[test]

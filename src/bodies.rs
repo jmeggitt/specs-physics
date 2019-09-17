@@ -4,18 +4,18 @@ use specs::{Component, DenseVecStorage, FlaggedStorage};
 #[cfg(feature = "physics3d")]
 use nalgebra::Matrix3;
 
-use nphysics::{math::{Force, ForceType, Velocity, Point},
-               object::{Body, BodyHandle, BodyPart, BodyStatus, RigidBody, RigidBodyDesc}};
+use nphysics::{math::{Force, ForceType, Point, Velocity},
+               object::{Body, BodyPart, BodyStatus, DefaultBodyHandle, RigidBody, RigidBodyDesc}};
 
-// Note: `nphysics::math::AngularInertia` could have been used in this file, but it uses a 1x1
-// matrix in 2d which is inconvenient.
+// Note: `nphysics::math::AngularInertia` could have been used in this file, but
+// it uses a 1x1 matrix in 2d which is inconvenient.
 
 /// The `PhysicsBody` `Component` represents a `PhysicsWorld` `RigidBody` in
 /// Specs and contains all the data required for the synchronisation between
 /// both worlds.
 #[derive(Clone, Copy, Debug)]
 pub struct PhysicsBody<N: RealField> {
-    pub(crate) handle: Option<BodyHandle>,
+    pub(crate) handle: Option<DefaultBodyHandle>,
     pub gravity_enabled: bool,
     pub body_status: BodyStatus,
     pub velocity: Velocity<N>,
