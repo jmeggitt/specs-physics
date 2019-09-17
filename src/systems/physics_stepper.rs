@@ -1,10 +1,9 @@
 use std::marker::PhantomData;
 
-use specs::{world::Index, Entities, Entity, Read, Resources, System, SystemData, Write,
-            WriteExpect};
+use specs::{Entities, Entity, Read, System, Write, WriteExpect};
 
 use crate::events::{ContactEvent, ContactEvents, ContactType, ProximityEvent, ProximityEvents};
-use crate::{parameters::TimeStep, Physics};
+use crate::{parameters::TimeStep, Physics, PhysicsWorld};
 use nalgebra::RealField;
 use ncollide::pipeline::ContactEvent as NContactEvent;
 use nphysics::force_generator::DefaultForceGeneratorSet;
@@ -19,9 +18,7 @@ pub type StorageSets<'a, N> = (
 );
 
 /// The `PhysicsStepperSystem` progresses the nphysics `World`.
-pub struct PhysicsStepperSystem<N> {
-    _phantom: PhantomData<N>,
-}
+pub struct PhysicsStepperSystem<N>(PhantomData<N>);
 
 impl<'s, N: RealField> System<'s> for PhysicsStepperSystem<N> {
     type SystemData = (
@@ -29,19 +26,13 @@ impl<'s, N: RealField> System<'s> for PhysicsStepperSystem<N> {
         Option<Read<'s, TimeStep<N>>>,
         Write<'s, ContactEvents>,
         Write<'s, ProximityEvents>,
-        Write<'s, Physics<N>>,
+        PhysicsWorld<'s, N>,
         StorageSets<'s, N>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (
-            entities,
-            time_step,
-            mut contact_events,
-            mut proximity_events,
-            mut physics,
-            storage,
-        ) = data;
+        let (entities, time_step, mut contact_events, mut proximity_events, mut physics, storage) =
+            data;
 
         let (mut bodies, mut colliders, mut joints, mut forces) = storage;
 
@@ -102,12 +93,8 @@ impl<'s, N: RealField> System<'s> for PhysicsStepperSystem<N> {
                     // CollisionObjectHandles to Entities is error prone but should work as intended
                     // as long as we're the only ones working directly with the nphysics World
                     ContactEvent {
-                        collider1: entity_from_collision_object_handle(
-                            &entities, handle1, &colliders,
-                        ),
-                        collider2: entity_from_collision_object_handle(
-                            &entities, handle2, &colliders,
-                        ),
+                        collider1: collider_handle_to_entity(&entities, handle1, &colliders),
+                        collider2: collider_handle_to_entity(&entities, handle2, &colliders),
                         contact_type,
                     }
                 }),
@@ -131,50 +118,33 @@ impl<'s, N: RealField> System<'s> for PhysicsStepperSystem<N> {
                 // CollisionObjectHandles to Entities is once again error prone, but yeah...
                 // ncollides Proximity types are mapped to our own types
                 ProximityEvent {
-                    collider1: entity_from_collision_object_handle(&entities, handle1, &colliders),
-                    collider2: entity_from_collision_object_handle(&entities, handle2, &colliders),
+                    collider1: collider_handle_to_entity(&entities, handle1, &colliders),
+                    collider2: collider_handle_to_entity(&entities, handle2, &colliders),
                     prev_status,
                     new_status,
                 }
             },
         ));
     }
-
-    // TODO: This can probably be deleted without causing any issues
-    fn setup(&mut self, res: &mut Resources) {
-        info!("PhysicsStepperSystem.setup");
-        Self::SystemData::setup(res);
-
-        // initialise required resources
-        res.entry::<Physics<N>>().or_insert_with(Physics::default);
-    }
 }
 
-//TODO: Derive
-impl<N> Default for PhysicsStepperSystem<N>
-where
-    N: RealField,
-{
+impl<N> Default for PhysicsStepperSystem<N> {
     fn default() -> Self {
-        Self {
-            _phantom: PhantomData,
-        }
+        Self(PhantomData)
     }
 }
 
 // TODO: Make this readable
-fn entity_from_collision_object_handle<N: RealField>(
+fn collider_handle_to_entity<N: RealField>(
     entities: &Entities,
     handle: DefaultColliderHandle,
     colliders: &DefaultColliderSet<N>,
 ) -> Entity {
-    entities.entity(
-        *colliders
-            .get(handle)
-            .unwrap()
-            .user_data()
-            .unwrap()
-            .downcast_ref::<Index>()
-            .unwrap(),
-    )
+    let id = colliders
+        .get(handle)
+        .unwrap()
+        .user_data()
+        .unwrap()
+        .downcast_ref();
+    entities.entity(*id.unwrap())
 }

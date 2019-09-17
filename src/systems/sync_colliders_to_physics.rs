@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use specs::{storage::ComponentEvent, world::Index, Join, ReadStorage, ReaderId, Resources, System,
             SystemData, WriteExpect, WriteStorage};
 
-use crate::{colliders::PhysicsCollider, pose::Pose, Physics, PhysicsParent};
+use crate::{colliders::PhysicsCollider, pose::Pose, Physics, PhysicsParent, PhysicsWorld};
 use nalgebra::RealField;
 use nphysics::object::{BodyPartHandle, ColliderDesc, DefaultColliderSet};
 
@@ -25,19 +25,13 @@ where
     type SystemData = (
         ReadStorage<'s, P>,
         ReadStorage<'s, PhysicsParent>,
-        WriteExpect<'s, Physics<N>>,
+        PhysicsWorld<'s, N>,
         WriteExpect<'s, DefaultColliderSet<N>>,
         WriteStorage<'s, PhysicsCollider<N>>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
-        let (
-            positions,
-            parent_entities,
-            mut physics,
-            mut colliders,
-            mut physics_colliders,
-        ) = data;
+        let (positions, parent_entities, mut physics, mut colliders, mut physics_colliders) = data;
 
         // collect all ComponentEvents for the Pose storage
         let (inserted_positions, ..) =
@@ -114,11 +108,7 @@ where
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        info!("SyncCollidersToPhysicsSystem.setup");
         Self::SystemData::setup(res);
-
-        // initialise required resources
-        res.entry::<Physics<N>>().or_insert_with(Physics::default);
 
         // register reader id for the Pose storage
         let mut position_storage: WriteStorage<P> = SystemData::fetch(&res);
@@ -131,11 +121,7 @@ where
     }
 }
 
-impl<N, P> Default for SyncCollidersToPhysicsSystem<N, P>
-where
-    N: RealField,
-    P: Pose<N>,
-{
+impl<N, P> Default for SyncCollidersToPhysicsSystem<N, P> {
     fn default() -> Self {
         Self {
             positions_reader_id: None,

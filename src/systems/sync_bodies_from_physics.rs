@@ -1,17 +1,15 @@
 use std::marker::PhantomData;
 
-use specs::{Join, Resources, System, SystemData, WriteExpect, WriteStorage};
+use specs::{Join, System, WriteExpect, WriteStorage};
 
-use crate::{bodies::PhysicsBody, pose::Pose, Physics};
+use crate::{bodies::PhysicsBody, pose::Pose};
 use nalgebra::RealField;
 use nphysics::object::DefaultBodySet;
 
 /// The `SyncBodiesFromPhysicsSystem` synchronised the updated position of
 /// the `RigidBody`s in the nphysics `World` with their Specs counterparts. This
 /// affects the `Pose` `Component` related to the `Entity`.
-pub struct SyncBodiesFromPhysicsSystem<N, P> {
-    _phantom: PhantomData<(N, P)>,
-}
+pub struct SyncBodiesFromPhysicsSystem<N, P>(PhantomData<(N, P)>);
 
 impl<'s, N, P> System<'s> for SyncBodiesFromPhysicsSystem<N, P>
 where
@@ -37,26 +35,10 @@ where
             }
         }
     }
-
-    // TODO: Remove
-    fn setup(&mut self, res: &mut Resources) {
-        info!("SyncBodiesFromPhysicsSystem.setup");
-        Self::SystemData::setup(res);
-
-        // initialise required resources
-        res.entry::<Physics<N>>().or_insert_with(Physics::default);
-    }
 }
 
-// TODO: Attempt to derive
-impl<N, P> Default for SyncBodiesFromPhysicsSystem<N, P>
-where
-    N: RealField,
-    P: Pose<N>,
-{
+impl<N, P> Default for SyncBodiesFromPhysicsSystem<N, P> {
     fn default() -> Self {
-        Self {
-            _phantom: PhantomData,
-        }
+        Self(PhantomData)
     }
 }

@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use specs::{storage::ComponentEvent, world::Index, BitSet, Join, ReadStorage, ReaderId, Resources,
             System, SystemData, WriteExpect, WriteStorage};
 
-use crate::{bodies::PhysicsBody, pose::Pose, Physics};
+use crate::{bodies::PhysicsBody, pose::Pose, Physics, PhysicsWorld};
 use nalgebra::RealField;
 use nphysics::object::DefaultBodySet;
 
@@ -24,7 +24,7 @@ where
 {
     type SystemData = (
         ReadStorage<'s, P>,
-        WriteExpect<'s, Physics<N>>,
+        PhysicsWorld<'s, N>,
         WriteExpect<'s, DefaultBodySet<N>>,
         WriteStorage<'s, PhysicsBody<N>>,
     );
@@ -91,11 +91,7 @@ where
     }
 
     fn setup(&mut self, res: &mut Resources) {
-        info!("SyncBodiesToPhysicsSystem.setup");
         Self::SystemData::setup(res);
-
-        // initialise required resources
-        res.entry::<Physics<N>>().or_insert_with(Physics::default);
 
         // register reader id for the Pose storage
         let mut position_storage: WriteStorage<P> = SystemData::fetch(&res);
@@ -107,11 +103,7 @@ where
     }
 }
 
-impl<N, P> Default for SyncBodiesToPhysicsSystem<N, P>
-where
-    N: RealField,
-    P: Pose<N>,
-{
+impl<N, P> Default for SyncBodiesToPhysicsSystem<N, P> {
     fn default() -> Self {
         Self {
             positions_reader_id: None,

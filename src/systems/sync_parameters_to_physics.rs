@@ -1,23 +1,21 @@
 use std::marker::PhantomData;
 
-use specs::{Read, Resources, System, SystemData, WriteExpect};
+use specs::{Read, System};
 
-use crate::{parameters::{Gravity, PhysicsIntegrationParameters, PhysicsProfilingEnabled},
-            Physics};
+use crate::parameters::{Gravity, PhysicsIntegrationParameters, PhysicsProfilingEnabled};
+use crate::PhysicsWorld;
 use nalgebra::RealField;
 
 /// The `SyncParametersToPhysicsSystem` synchronises the simulation parameters
 /// with the nphysics `World`.
-pub struct SyncParametersToPhysicsSystem<N> {
-    _phantom: PhantomData<N>,
-}
+pub struct SyncParametersToPhysicsSystem<N>(PhantomData<N>);
 
 impl<'s, N: RealField> System<'s> for SyncParametersToPhysicsSystem<N> {
     type SystemData = (
         Option<Read<'s, Gravity<N>>>,
         Option<Read<'s, PhysicsProfilingEnabled>>,
         Option<Read<'s, PhysicsIntegrationParameters<N>>>,
-        WriteExpect<'s, Physics<N>>,
+        PhysicsWorld<'s, N>,
     );
 
     fn run(&mut self, data: Self::SystemData) {
@@ -52,24 +50,11 @@ impl<'s, N: RealField> System<'s> for SyncParametersToPhysicsSystem<N> {
             }
         }
     }
-
-    fn setup(&mut self, res: &mut Resources) {
-        info!("SyncParametersToPhysicsSystem.setup");
-        Self::SystemData::setup(res);
-
-        // initialise required resources
-        res.entry::<Physics<N>>().or_insert_with(Physics::default);
-    }
 }
 
-impl<N> Default for SyncParametersToPhysicsSystem<N>
-where
-    N: RealField,
-{
+impl<N> Default for SyncParametersToPhysicsSystem<N> {
     fn default() -> Self {
-        Self {
-            _phantom: PhantomData,
-        }
+        Self(PhantomData)
     }
 }
 

@@ -248,7 +248,7 @@ pub use shrev;
 use std::collections::HashMap;
 
 use specs::{world::Index, Component, DenseVecStorage, Dispatcher, DispatcherBuilder, Entity,
-            FlaggedStorage};
+            FlaggedStorage, Write};
 use specs_hierarchy::Parent;
 
 pub use bodies::{PhysicsBody, PhysicsBodyBuilder};
@@ -286,9 +286,9 @@ pub mod systems;
 /// Some inspection methods are exposed to allow debugging.
 pub struct Physics<N: RealField> {
     /// Core structure where physics computation and synchronization occurs.
-    pub(crate) mechanical_world: DefaultMechanicalWorld<N>,
+    pub mechanical_world: DefaultMechanicalWorld<N>,
     /// Core structure where physics computation and synchronization occurs.
-    pub(crate) geometric_world: DefaultGeometricalWorld<N>,
+    pub geometric_world: DefaultGeometricalWorld<N>,
     /// Hashmap of Entities to internal Physics bodies.q
     /// Necessary for reacting to removed Components.
     pub(crate) body_handles: HashMap<Index, DefaultBodyHandle>,
@@ -346,6 +346,9 @@ impl<N: RealField> Default for Physics<N> {
         }
     }
 }
+
+/// A system data type for getting the physics worlds.
+pub type PhysicsWorld<'a, N> = Write<'a, Physics<N>>;
 
 /// The `PhysicsParent` `Component` is used to represent a parent/child
 /// relationship between physics based `Entity`s.
