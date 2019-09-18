@@ -4,6 +4,9 @@ use std::ops::{Deref, DerefMut};
 
 use nphysics::math::{Isometry, Point};
 
+#[cfg(feature = "physics2d")]
+use amethyst_core::math::{Translation2, UnitComplex};
+
 /// A `Pose` is a position and an orientation. They are wrapped together into an
 /// isometry for use in the physics engine.
 ///
