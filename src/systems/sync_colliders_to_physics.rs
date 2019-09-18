@@ -162,17 +162,21 @@ fn add_collider<N, P>(
 
     // Create the Collider and fetch its handle. We know the body part handle will
     // always have index 0 due to ecs requirement.
-    let collider = ColliderDesc::new(physics_collider.shape_handle())
+    let mut collider = ColliderDesc::new(physics_collider.shape_handle())
         .position(position.isometry() * physics_collider.offset_from_parent)
         .density(physics_collider.density)
-        .material(physics_collider.material.clone())
         .margin(physics_collider.margin)
         .collision_groups(physics_collider.collision_groups)
         .linear_prediction(physics_collider.linear_prediction)
         .angular_prediction(physics_collider.angular_prediction)
         .sensor(physics_collider.sensor)
-        .user_data(id)
-        .build(BodyPartHandle(*parent_part_handle, 0));
+        .user_data(id);
+
+    if let Some(material) = &physics_collider.material {
+        collider = collider.material(material.clone());
+    }
+
+    let collider = collider.build(BodyPartHandle(*parent_part_handle, 0));
 
     let handle = colliders.insert(collider);
 

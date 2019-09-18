@@ -1,14 +1,14 @@
-use std::{f32::consts::PI, fmt, ops::Deref};
+use std::{f64::consts::PI, fmt, ops::Deref};
 
 use specs::{Component, DenseVecStorage, Entities, Entity, FlaggedStorage};
 
-use nalgebra::{Point2, Point3, RealField, Unit};
+use nalgebra::{convert, Point2, Point3, RealField, Unit};
 use ncollide::pipeline::CollisionGroups;
 use ncollide::shape::{Ball, Capsule, Compound, Cuboid, HeightField, Plane, Polyline, Segment,
                       ShapeHandle};
-use nphysics::material::{BasicMaterial, MaterialHandle};
+use nphysics::material::MaterialHandle;
 use nphysics::math::{Isometry, Point, Vector};
-use nphysics::object::{DefaultColliderHandle, DefaultColliderSet};
+use nphysics::object::{ColliderDesc, DefaultColliderHandle, DefaultColliderSet};
 
 #[cfg(feature = "physics3d")]
 use ncollide::shape::{ConvexHull, TriMesh, Triangle};
@@ -160,7 +160,7 @@ pub struct PhysicsCollider<N: RealField> {
     pub shape: Shape<N>,
     pub offset_from_parent: Isometry<N>,
     pub density: N,
-    pub material: MaterialHandle<N>,
+    pub material: Option<MaterialHandle<N>>,
     pub margin: N,
     pub collision_groups: CollisionGroups,
     pub linear_prediction: N,
@@ -237,7 +237,7 @@ pub struct PhysicsColliderBuilder<N: RealField> {
     shape: Shape<N>,
     offset_from_parent: Isometry<N>,
     density: N,
-    material: MaterialHandle<N>,
+    material: Option<MaterialHandle<N>>,
     margin: N,
     collision_groups: CollisionGroups,
     linear_prediction: N,
@@ -252,12 +252,12 @@ impl<N: RealField> From<Shape<N>> for PhysicsColliderBuilder<N> {
         Self {
             shape,
             offset_from_parent: Isometry::identity(),
-            density: N::from_f32(1.3).unwrap(),
-            material: MaterialHandle::new(BasicMaterial::default()),
-            margin: N::from_f32(0.2).unwrap(), // default was: 0.01
+            density: N::zero(),
+            material: None,
+            margin: ColliderDesc::default_margin(),
             collision_groups: CollisionGroups::default(),
-            linear_prediction: N::from_f32(0.002).unwrap(),
-            angular_prediction: N::from_f32(PI / 180.0 * 5.0).unwrap(),
+            linear_prediction: convert(0.001),
+            angular_prediction: convert(PI / 180.0 * 5.0),
             sensor: false,
         }
     }
@@ -278,7 +278,7 @@ impl<N: RealField> PhysicsColliderBuilder<N> {
 
     /// Sets the `material` value of the `PhysicsColliderBuilder`.
     pub fn material(mut self, material: MaterialHandle<N>) -> Self {
-        self.material = material;
+        self.material = Some(material);
         self
     }
 

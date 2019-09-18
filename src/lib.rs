@@ -234,7 +234,6 @@
 #[macro_use]
 extern crate log;
 
-pub use nalgebra;
 #[cfg(feature = "physics2d")]
 pub extern crate ncollide2d as ncollide;
 #[cfg(feature = "physics3d")]
@@ -245,28 +244,28 @@ pub extern crate nphysics2d as nphysics;
 pub extern crate nphysics3d as nphysics;
 pub use shrev;
 
+pub use bodies::{PhysicsBody, PhysicsBodyBuilder};
+pub use colliders::{PhysicsCollider, PhysicsColliderBuilder};
+pub use nalgebra as math;
+#[allow(deprecated)]
+pub use pose::{Pose, Position, SimplePosition};
+
 use std::collections::HashMap;
 
 use specs::{world::Index, Component, DenseVecStorage, Dispatcher, DispatcherBuilder, Entity,
             FlaggedStorage, Write};
 use specs_hierarchy::Parent;
 
-pub use bodies::{PhysicsBody, PhysicsBodyBuilder};
-pub use colliders::{PhysicsCollider, PhysicsColliderBuilder};
-pub use pose::{Pose, Position, SimplePosition};
-
-use nphysics::{counters::Counters,
-               material::MaterialsCoefficientsTable,
-               object::{DefaultBodyHandle, DefaultColliderHandle},
+use nphysics::math::Vector;
+use nphysics::object::{DefaultBodyHandle, DefaultColliderHandle};
+use nphysics::{counters::Counters, material::MaterialsCoefficientsTable,
                solver::IntegrationParameters};
 
 use nphysics::world::{DefaultGeometricalWorld, DefaultMechanicalWorld};
 
+use nalgebra::RealField;
 use systems::{PhysicsStepperSystem, SyncBodiesFromPhysicsSystem, SyncBodiesToPhysicsSystem,
               SyncCollidersToPhysicsSystem, SyncParametersToPhysicsSystem};
-
-use nalgebra::RealField;
-use nphysics::math::Vector;
 
 pub mod bodies;
 pub mod colliders;
