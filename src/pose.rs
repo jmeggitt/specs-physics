@@ -50,12 +50,12 @@ pub trait Position<N: RealField>: Pose<N> {}
 #[cfg(feature = "amethyst")]
 #[cfg(feature = "physics3d")]
 impl Pose<f32> for amethyst_core::Transform {
-    fn isometry(&self) -> Isometry3<f32> {
+    fn isometry(&self) -> Isometry<f32> {
         *self.isometry()
     }
 
-    fn set_isometry(&mut self, isometry: &Isometry3<f32>) -> &mut Self {
-        self.set_isometry(*isometry)
+    fn set_isometry(&mut self, isometry: Isometry<f32>) -> &mut Self {
+        self.set_isometry(isometry)
     }
 }
 
