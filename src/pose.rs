@@ -37,6 +37,13 @@ pub trait Pose<N: RealField>:
     }
 }
 
+#[deprecated(
+    since = "0.4.0",
+    note = "Position was renamed to Pose to better reflect how it\
+            contains an orientation and to make it slightly shorter."
+)]
+pub trait Position<N: RealField>: Pose<N> {}
+
 #[cfg(feature = "amethyst")]
 #[cfg(feature = "physics3d")]
 impl Pose<f32> for amethyst_core::Transform {

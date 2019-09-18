@@ -253,14 +253,7 @@ use specs_hierarchy::Parent;
 
 pub use bodies::{PhysicsBody, PhysicsBodyBuilder};
 pub use colliders::{PhysicsCollider, PhysicsColliderBuilder};
-pub use pose::{Pose, SimplePosition};
-
-#[deprecated(
-    since = "0.4.0",
-    note = "Position was renamed to Pose to better reflect how it\
-            contains an orientation and to make it slightly shorter."
-)]
-pub trait Position<N: RealField>: Pose<N> {}
+pub use pose::{Pose, Position, SimplePosition};
 
 use nphysics::{counters::Counters,
                material::MaterialsCoefficientsTable,
@@ -388,7 +381,7 @@ where
 
 /// Convenience function for registering all required physics related `System`s
 /// to the given `DispatcherBuilder`. This also serves as a blueprint on how
-///// to properly set up the `System`s and have them depend on each other.
+/// to properly set up the `System`s and have them depend on each other.
 pub fn register_physics_systems<N, P>(dispatcher_builder: &mut DispatcherBuilder)
 where
     N: RealField,

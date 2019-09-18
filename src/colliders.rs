@@ -1,6 +1,6 @@
 use std::{f32::consts::PI, fmt, ops::Deref};
 
-use specs::{Component, DenseVecStorage, FlaggedStorage};
+use specs::{Component, DenseVecStorage, Entities, Entity, FlaggedStorage};
 
 use nalgebra::{Point2, Point3, RealField, Unit};
 use ncollide::pipeline::CollisionGroups;
@@ -8,7 +8,7 @@ use ncollide::shape::{Ball, Capsule, Compound, Cuboid, HeightField, Plane, Polyl
                       ShapeHandle};
 use nphysics::material::{BasicMaterial, MaterialHandle};
 use nphysics::math::{Isometry, Point, Vector};
-use nphysics::object::DefaultColliderHandle;
+use nphysics::object::{DefaultColliderHandle, DefaultColliderSet};
 
 #[cfg(feature = "physics3d")]
 use ncollide::shape::{ConvexHull, TriMesh, Triangle};
@@ -38,6 +38,23 @@ impl<'clone, N: RealField> IntoMesh for Box<(dyn IntoMesh<N = N> + 'clone)> {
 impl<'clone, N: RealField> Clone for Box<dyn IntoMesh<N = N> + 'clone> {
     fn clone(&self) -> Self {
         objekt::clone_box(&*self)
+    }
+}
+
+/// Converts a `DefaultColliderHandle` into the specs Entity that collider to
+/// attached to if possible. If the handle is invalid or the entity is no longer
+/// alive, `None` will be returned instead.
+pub fn collider_handle_to_entity<N: RealField>(
+    handle: DefaultColliderHandle,
+    entities: &Entities,
+    colliders: &DefaultColliderSet<N>,
+) -> Option<Entity> {
+    let id = colliders.get(handle)?.user_data()?.downcast_ref()?;
+    let entity = entities.entity(*id);
+
+    match entities.is_alive(entity) {
+        true => Some(entity),
+        false => None,
     }
 }
 
